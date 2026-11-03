@@ -4,6 +4,7 @@ from typing import List, Dict
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "FINN – Financial Investment Agent"
+    VERSION: str = "1.0.0"
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "*")
     API_V1_STR: str = "/api/v1"
     

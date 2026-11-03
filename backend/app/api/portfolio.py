@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
+import math
 from app.database import get_db
 from app.models.models import PortfolioItem, Announcement, Alert
 from app.schemas.schemas import PortfolioItemCreate, PortfolioItemResponse, PortfolioSummaryResponse, SectorAllocation
@@ -27,8 +28,25 @@ def get_portfolio_summary(db: Session = Depends(get_db)):
     for item in items:
         # Fetch latest market snapshot for ticker
         snap = StockService.fetch_stock_snapshot(item.ticker, db)
-        current_price = snap.get("current_price", item.avg_buy_price)
+
+        current_price = snap.get("current_price")
         pct_change = snap.get("pct_change", 0.0)
+
+        # Never allow NaN or infinite values into portfolio calculations.
+        if (
+            current_price is None
+            or not math.isfinite(float(current_price))
+            or float(current_price) <= 0
+        ):
+            snap = StockService._get_benchmark_fallback(item.ticker)
+            current_price = snap["current_price"]
+            pct_change = snap["pct_change"]
+
+        if pct_change is None or not math.isfinite(float(pct_change)):
+            pct_change = 0.0
+
+        current_price = float(current_price)
+        pct_change = float(pct_change)
         
         m_val = round(item.shares_held * current_price, 2)
         inv_val = round(item.shares_held * item.avg_buy_price, 2)

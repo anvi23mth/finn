@@ -1,4 +1,5 @@
 import logging
+import math
 import numpy as np
 import pandas as pd
 import yfinance as yf
@@ -68,7 +69,16 @@ class StockService:
         # 2. Check DB cache
         if not force_refresh and db:
             db_snap = db.query(StockPriceSnapshot).filter(StockPriceSnapshot.ticker == clean_ticker).first()
-            if db_snap and db_snap.last_updated:
+            if (
+                db_snap
+                and db_snap.last_updated
+                and db_snap.current_price is not None
+                and math.isfinite(float(db_snap.current_price))
+                and float(db_snap.current_price) > 0
+                and db_snap.previous_close is not None
+                and math.isfinite(float(db_snap.previous_close))
+                and float(db_snap.previous_close) > 0
+            ):
                 age = (datetime.utcnow() - db_snap.last_updated).total_seconds()
                 if age < 1800: # 30 minutes
                     company_name = clean_ticker
@@ -116,6 +126,16 @@ class StockService:
 
                 current_price = float(latest["Close"])
                 previous_close = float(prev["Close"])
+
+                # Reject missing, NaN, infinite, or non-positive prices.
+                if (
+                    not math.isfinite(current_price)
+                    or not math.isfinite(previous_close)
+                    or current_price <= 0
+                    or previous_close <= 0
+                ):
+                    raise ValueError("Yahoo Finance returned invalid closing prices")
+
                 change = current_price - previous_close
                 pct_change = (change / previous_close) * 100.0 if previous_close else 0.0
                 
@@ -182,11 +202,53 @@ class StockService:
         except Exception as e:
             logger.info(f"Live yfinance not accessible for {ns_ticker} ({e}). Serving verified exchange benchmark.")
 
-        # 4. Graceful fallback to verified benchmark data
+        # 4. Preserve the last valid database snapshot if live data is unavailable.
+        if db:
+            try:
+                db_snap = (
+                    db.query(StockPriceSnapshot)
+                    .filter(StockPriceSnapshot.ticker == clean_ticker)
+                    .first()
+                )
+                if (
+                    db_snap
+                    and db_snap.current_price is not None
+                    and math.isfinite(float(db_snap.current_price))
+                    and float(db_snap.current_price) > 0
+                    and db_snap.previous_close is not None
+                    and float(db_snap.previous_close) > 0
+                ):
+                    fallback = {
+                        "ticker": clean_ticker,
+                        "name": FALLBACK_BASE_PRICES.get(clean_ticker, {}).get("name", clean_ticker),
+                        "sector": FALLBACK_BASE_PRICES.get(clean_ticker, {}).get("sector", "Diversified"),
+                        "current_price": db_snap.current_price,
+                        "previous_close": db_snap.previous_close,
+                        "change": db_snap.change,
+                        "pct_change": db_snap.pct_change,
+                        "open_price": db_snap.open_price,
+                        "day_high": db_snap.day_high,
+                        "day_low": db_snap.day_low,
+                        "volume": db_snap.volume,
+                        "avg_vol_20d": db_snap.avg_vol_20d,
+                        "volume_spike_ratio": db_snap.volume_spike_ratio,
+                        "volatility_20d": db_snap.volatility_20d,
+                        "market_cap": db_snap.market_cap,
+                        "pe_ratio": db_snap.pe_ratio,
+                        "last_updated": db_snap.last_updated,
+                        "data_source": "Last stored market snapshot (not live)",
+                        "is_demo_data": False,
+                    }
+                    _MEMORY_CACHE[clean_ticker] = fallback
+                    return fallback
+            except Exception as e:
+                db.rollback()
+                logger.warning(f"Could not read previous snapshot for {clean_ticker}: {e}")
+
+        # 5. Use static benchmark values only when no valid stored price exists.
         fallback = cls._get_benchmark_fallback(clean_ticker)
         _MEMORY_CACHE[clean_ticker] = fallback
-        if db:
-            cls._save_snapshot_to_db(db, fallback)
+        # Do not persist static benchmark values as exchange market prices.
         return fallback
 
     @classmethod
@@ -280,8 +342,8 @@ class StockService:
             "market_cap": float(info["mcap"]),
             "pe_ratio": info["pe"],
             "last_updated": datetime.utcnow(),
-            "data_source": "EOD Exchange Benchmark",
-            "is_demo_data": False
+            "data_source": "Static benchmark fallback (not live market data)",
+            "is_demo_data": True
         }
 
     @staticmethod

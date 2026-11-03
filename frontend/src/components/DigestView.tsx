@@ -268,7 +268,7 @@ export const DigestView: React.FC<DigestViewProps> = ({
                     <div className="p-2 rounded-lg bg-[#090d16] border border-slate-800">
                       <div className="text-[10px] text-slate-400 font-medium">Revenue</div>
                       <div className="font-mono font-bold text-xs text-white mt-0.5">
-                        ₹{ann.results_data.revenue_cr.toLocaleString('en-IN')}
+                        ₹{ann.results_data.revenue_cr != null ? ann.results_data.revenue_cr.toLocaleString('en-IN') : '—'}
                       </div>
                       <div className="text-[10px] text-emerald-400 mt-0.5">
                         {ann.results_data.revenue_yoy_pct ? `+${ann.results_data.revenue_yoy_pct}% YoY` : ''}
@@ -278,7 +278,7 @@ export const DigestView: React.FC<DigestViewProps> = ({
                     <div className="p-2 rounded-lg bg-[#090d16] border border-slate-800">
                       <div className="text-[10px] text-slate-400 font-medium">EBITDA</div>
                       <div className="font-mono font-bold text-xs text-white mt-0.5">
-                        ₹{ann.results_data.ebitda_cr.toLocaleString('en-IN')}
+                        ₹{ann.results_data.ebitda_cr != null ? ann.results_data.ebitda_cr.toLocaleString('en-IN') : '—'}
                       </div>
                       <div className="text-[10px] text-slate-400 mt-0.5">
                         {ann.results_data.ebitda_margin_pct ? `${ann.results_data.ebitda_margin_pct}% Margin` : ''}
@@ -288,7 +288,7 @@ export const DigestView: React.FC<DigestViewProps> = ({
                     <div className="p-2 rounded-lg bg-[#090d16] border border-slate-800">
                       <div className="text-[10px] text-slate-400 font-medium">PBT</div>
                       <div className="font-mono font-bold text-xs text-white mt-0.5">
-                        ₹{ann.results_data.pbt_cr.toLocaleString('en-IN')}
+                        ₹{ann.results_data.pbt_cr != null ? ann.results_data.pbt_cr.toLocaleString('en-IN') : '—'}
                       </div>
                       <div className="text-[10px] text-slate-400 mt-0.5">Pre-Tax</div>
                     </div>
@@ -296,7 +296,7 @@ export const DigestView: React.FC<DigestViewProps> = ({
                     <div className="p-2 rounded-lg bg-[#090d16] border border-slate-800">
                       <div className="text-[10px] text-slate-400 font-medium">PAT (Net Profit)</div>
                       <div className="font-mono font-bold text-xs text-white mt-0.5">
-                        ₹{ann.results_data.pat_cr.toLocaleString('en-IN')}
+                        ₹{ann.results_data.pat_cr != null ? ann.results_data.pat_cr.toLocaleString('en-IN') : '—'}
                       </div>
                       <div className="text-[10px] text-emerald-400 mt-0.5">
                         {ann.results_data.pat_yoy_pct ? `+${ann.results_data.pat_yoy_pct}% YoY` : ''}

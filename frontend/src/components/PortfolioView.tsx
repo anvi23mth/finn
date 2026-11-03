@@ -114,7 +114,7 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
               </span>
             </div>
             <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-1">
-              ₹{summary.total_market_value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+              ₹{summary.total_market_value != null ? summary.total_market_value.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '—'}
             </div>
             <div className="flex items-center space-x-2 mt-2">
               <span
@@ -125,7 +125,7 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
                 }`}
               >
                 {isNetPositive ? <TrendingUp className="w-3.5 h-3.5 mr-1" /> : <TrendingDown className="w-3.5 h-3.5 mr-1" />}
-                {isNetPositive ? '+' : ''}{summary.daily_change_pct.toFixed(2)}% (₹{Math.abs(summary.daily_change_value).toLocaleString('en-IN')})
+                {isNetPositive ? '+' : ''}{summary.daily_change_pct != null ? summary.daily_change_pct.toFixed(2) : '—'}% (₹{Math.abs(summary.daily_change_value ?? 0).toLocaleString('en-IN')})
               </span>
               <span className="text-[11px] text-slate-400">Daily Trajectory</span>
             </div>
@@ -170,7 +170,7 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
                   key={sec.sector}
                   style={{ width: `${Math.max(sec.weight_pct, 1)}%` }}
                   className={`h-full ${colors[i % colors.length]}`}
-                  title={`${sec.sector}: ${sec.weight_pct}% (₹${sec.total_value.toLocaleString('en-IN')})`}
+                  title={`${sec.sector}: ${sec.weight_pct}% (₹${(sec.total_value ?? 0).toLocaleString('en-IN')})`}
                 />
               );
             })}

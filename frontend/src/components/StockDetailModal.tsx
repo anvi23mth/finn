@@ -81,7 +81,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div>
               <div className="text-3xl font-extrabold font-mono text-white tracking-tight">
-                ₹{snap.current_price.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                ₹{snap.current_price != null ? snap.current_price.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '—'}
               </div>
               <div className="flex items-center space-x-2 mt-1">
                 <span
@@ -90,7 +90,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
                   }`}
                 >
                   {isPos ? <TrendingUp className="w-3.5 h-3.5 mr-1" /> : <TrendingDown className="w-3.5 h-3.5 mr-1" />}
-                  {isPos ? '+' : ''}{snap.pct_change.toFixed(2)}% (₹{snap.change.toFixed(2)})
+                  {isPos ? '+' : ''}{snap.pct_change != null ? snap.pct_change.toFixed(2) : '—'}% (₹{snap.change != null ? snap.change.toFixed(2) : '—'})
                 </span>
                 <span className="text-[11px] text-slate-400">vs prev close ₹{snap.previous_close}</span>
               </div>
@@ -182,7 +182,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
             <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
               <div className="text-[10px] text-slate-400 font-medium">Market Capitalisation</div>
               <div className="font-mono text-xs font-bold text-white mt-1">
-                ₹{snap.market_cap.toLocaleString('en-IN')} Cr
+                ₹{snap.market_cap != null ? snap.market_cap.toLocaleString('en-IN') : '—'} Cr
               </div>
             </div>
           </div>
